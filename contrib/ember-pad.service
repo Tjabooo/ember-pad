@@ -1,0 +1,13 @@
+[Unit]
+Description=ember-pad: LAN touch deck for a tablet
+After=graphical-session.target pipewire-pulse.service
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/ember-pad serve
+Restart=on-failure
+RestartSec=2
+Nice=5
+
+[Install]
+WantedBy=graphical-session.target

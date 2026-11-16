@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MAGI DECK</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MAGI DECK">
+<style>
+@font-face { font-family: JBM; src: url(/font/regular.ttf) format("truetype"); font-weight: 400; }
+@font-face { font-family: JBM; src: url(/font/bold.ttf) format("truetype"); font-weight: 700; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: rgba(0,0,0,0); -webkit-user-select: none; -webkit-touch-callout: none; }
+html, body { height: 100%; overflow: hidden; }
+body { background: #120d0a; color: #d8cbbf; font-family: JBM, Menlo, monospace; font-size: 15px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; padding: 20px 14px 14px; }
+.flex { display: -webkit-flex; display: flex; }
+.col { display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; min-width: 0; min-height: 0; }
+.grow { -webkit-flex: 1; flex: 1; min-width: 0; min-height: 0; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.hscroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+
+header { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; height: 40px; margin-bottom: 10px; }
+.brand { font-weight: 700; font-size: 17px; color: #ff8c1a; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-right: 14px; }
+.brand .dot { width: 10px; height: 10px; border-radius: 5px; background: #ff8c1a; margin-right: 8px; }
+.brand.down { color: #e5484d; } .brand.down .dot { background: #e5484d; }
+.tabs { display: -webkit-flex; display: flex; }
+.tab { padding: 8px 9px; border: 1px solid #3a2c22; border-left: 0; color: #b2a397; font-weight: 700; font-size: 12px; }
+.tab:first-child { border-left: 1px solid #3a2c22; border-radius: 6px 0 0 6px; } .tab:last-child { border-radius: 0 6px 6px 0; }
+.tab.sel { background: #ff8c1a; border-color: #ff8c1a; color: #120d0a; }
+.tab.ping { color: #e5484d; }
+.spacer { -webkit-flex: 1; flex: 1; }
+#perfmini { font-size: 12px; color: #b2a397; white-space: nowrap; }
+#perfmini b { color: #d8cbbf; } #perfmini .bad { color: #e5484d; }
+#clock { font-size: 20px; font-weight: 700; margin-left: 12px; }
+
+main { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; min-height: 0; }
+main.hide { display: none; }
+.right { width: 300px; margin-left: 12px; }
+.lbl { font-size: 11px; font-weight: 700; color: #7a675a; margin: 2px 2px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row { display: -webkit-flex; display: flex; -webkit-flex: 1; flex: 1; margin-bottom: 10px; min-height: 0; }
+.row.r2 { -webkit-flex: 0.8; flex: 0.8; }
+.compact .slrow { height: 62px; margin-bottom: 8px; }
+.compact .slrow:last-child { margin-bottom: 0; }
+.compact .sl { height: 50px; }
+.compact .sl .tr { top: 19px; }
+.compact .sl .kn { top: 9px; }
+.row.quick { -webkit-flex: 0.62; flex: 0.62; margin-bottom: 0; }
+.row > .t { -webkit-flex: 1 1 0%; flex: 1 1 0%; min-width: 0; margin-right: 10px; }
+.row > .t:last-child { margin-right: 0; }
+
+.t { position: relative; overflow: hidden; background: #1b1410; border: 1px solid #3a2c22; border-radius: 8px; padding: 12px 14px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-justify-content: space-between; justify-content: space-between; }
+.t:before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: transparent; }
+.t .k { font-size: 12px; font-weight: 700; color: #b2a397; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t .ic { font-size: 40px; line-height: 1; color: #b2a397; }
+.t .v { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t .s { font-size: 11px; color: #7a675a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 14px; }
+.t.q { padding: 9px 10px; } .t.q .ic { font-size: 28px; } .t.q .k { font-size: 10px; } .t.q .v { font-size: 13px; }
+.down { -webkit-transform: scale(.97); transform: scale(.97); background-color: #2a1e16 !important; }
+.on { border-color: #ff8c1a !important; } .t.on:before { background: #ff4d1f; background: -webkit-linear-gradient(left, #ff4d1f, #ff8c1a); background: linear-gradient(to right, #ff4d1f, #ff8c1a); }
+.on .ic, .on .v { color: #ff8c1a; }
+.gold { border-color: #f5a524 !important; } .t.gold:before { background: #f5a524; } .gold .ic, .gold .v { color: #f5a524; }
+.alert { border-color: #e5484d !important; background-color: #2a1414 !important; } .t.alert:before { background: #e5484d; } .alert .ic, .alert .v { color: #e5484d; }
+.off { opacity: .42; }
+
+.mixbar { height: 10px; border-radius: 5px; background: #120d0a; border: 1px solid #3a2c22; position: relative; margin: 6px 0; }
+.mixbar i { position: absolute; top: -1px; bottom: -1px; width: 4px; margin-left: -2px; border-radius: 2px; background: #ff8c1a; left: 50%; }
+.mixbar b { position: absolute; top: 2px; bottom: 2px; left: 50%; width: 1px; background: #3a2c22; }
+.split { position: absolute; top: 0; bottom: 0; width: 50%; } .split.l { left: 0; } .split.r { right: 0; }
+.mixends { display: -webkit-flex; display: flex; -webkit-justify-content: space-between; justify-content: space-between; font-size: 12px; font-weight: 700; color: #b2a397; }
+
+.card { background: #1b1410; border: 1px solid #3a2c22; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+.card.live { border-color: #e5484d; }
+.big { font-size: 30px; font-weight: 700; color: #7a675a; margin: 4px 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card.live .big { color: #e5484d; }
+.sub { font-size: 13px; color: #b2a397; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hold { position: relative; overflow: hidden; height: 60px; border-radius: 8px; border: 1px solid #ff8c1a; color: #ff8c1a; font-weight: 700; font-size: 15px; text-align: center; line-height: 58px; margin-bottom: 10px; }
+.hold.end { border-color: #e5484d; color: #e5484d; }
+.hold .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,140,26,.28); }
+.hold.end .fill { background: rgba(229,72,77,.3); }
+.hold.go .fill { width: 100%; -webkit-transition: width .8s linear; transition: width .8s linear; }
+.hold span { position: relative; }
+.btn { border: 1px solid #3a2c22; border-radius: 6px; background: #1b1410; padding: 0 12px; height: 46px; line-height: 44px; font-weight: 700; font-size: 13px; color: #b2a397; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn.on { color: #ff8c1a; background: #241811; } .btn.alert { color: #e5484d; }
+.btnrow { display: -webkit-flex; display: flex; margin-bottom: 10px; }
+.btnrow > .btn { -webkit-flex: 1 1 0%; flex: 1 1 0%; min-width: 0; margin-right: 8px; } .btnrow > .btn:last-child { margin-right: 0; }
+.sc { -webkit-flex: 1; flex: 1; max-height: 64px; margin-bottom: 8px; border: 1px solid #3a2c22; border-left-width: 4px; border-radius: 6px; background: #1b1410; padding: 0 16px; font-weight: 700; font-size: 15px; color: #b2a397; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; }
+.sc:last-child { margin-bottom: 0; }
+.sc.cur { border-color: #ff8c1a; color: #ff8c1a; background: #241811; }
+
+/* discord */
+.av { width: 40px; height: 40px; border-radius: 20px; background: #3a2c22; color: #d8cbbf; font-weight: 700; font-size: 15px; text-align: center; line-height: 40px; overflow: hidden; -webkit-flex: none; flex: none; border: 2px solid transparent; }
+.av img { width: 100%; height: 100%; display: block; }
+.av.sm { width: 26px; height: 26px; line-height: 26px; font-size: 11px; border-radius: 13px; border-width: 2px; margin-right: -6px; }
+.av.speak { border-color: #ff8c1a; }
+.gchip { display: inline-block; vertical-align: top; width: 52px; height: 52px; margin-right: 8px; border-radius: 14px; border: 2px solid #3a2c22; background: #1b1410; position: relative; overflow: hidden; text-align: center; line-height: 48px; font-weight: 700; font-size: 14px; color: #b2a397; }
+.gchip img { width: 100%; height: 100%; display: block; }
+.gchip.sel { border-color: #ff8c1a; }
+.gchip .n { position: absolute; right: 2px; bottom: 2px; min-width: 18px; height: 18px; border-radius: 9px; background: #ff8c1a; color: #120d0a; font-size: 11px; line-height: 18px; padding: 0 4px; }
+.vch { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; min-height: 52px; padding: 6px 12px; margin-bottom: 6px; border: 1px solid #3a2c22; border-left-width: 4px; border-radius: 6px; background: #1b1410; }
+.vch.cur { border-color: #ff8c1a; background: #241811; }
+.vch .nm { font-weight: 700; font-size: 14px; -webkit-flex: 1; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #b2a397; }
+.vch.cur .nm { color: #ff8c1a; }
+.vch .who { display: -webkit-flex; display: flex; margin-left: 8px; padding-right: 6px; }
+.person { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 8px 10px; margin-bottom: 6px; border: 1px solid #3a2c22; border-radius: 8px; background: #1b1410; }
+.person.lm { opacity: .5; }
+.person .nm { -webkit-flex: 1; flex: 1; min-width: 0; margin: 0 10px; }
+.person .nm b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person .nm small { display: block; font-size: 11px; color: #7a675a; }
+.person .vb { width: 42px; height: 42px; line-height: 40px; border: 1px solid #3a2c22; border-radius: 6px; text-align: center; font-weight: 700; font-size: 20px; color: #b2a397; }
+.person .vv { width: 50px; text-align: center; font-weight: 700; font-size: 13px; }
+.sgrid { white-space: normal; }
+.snd { display: inline-block; vertical-align: top; width: 118px; height: 54px; margin: 0 8px 8px 0; padding: 6px 8px; border: 1px solid #3a2c22; border-radius: 8px; background: #1b1410; overflow: hidden; }
+.snd .e { font-size: 20px; line-height: 22px; height: 22px; }
+.snd .n { font-size: 11px; font-weight: 700; color: #b2a397; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* stream health */
+.hgrid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.hcell { width: 32%; height: 92px; margin: 0 2% 10px 0; background: #1b1410; border: 1px solid #3a2c22; border-radius: 8px; padding: 10px 14px; }
+.hcell:nth-child(3n) { margin-right: 0; }
+.hcell .s { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hcell .k { font-size: 11px; font-weight: 700; color: #7a675a; }
+.hcell .v { font-size: 28px; font-weight: 700; margin-top: 6px; }
+.hcell .s { font-size: 11px; color: #7a675a; }
+.hcell.bad { border-color: #e5484d; } .hcell.bad .v { color: #e5484d; }
+.hcell.good .v { color: #ff8c1a; }
+.viewer { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 6px 0; font-size: 14px; font-weight: 700; }
+.viewer .av { margin-right: 10px; }
+
+/* game */
+.score { font-size: 64px; font-weight: 700; letter-spacing: 0; }
+.score .ct { color: #b2a397; } .score .tt { color: #b2a397; } .score .mine { color: #ff8c1a; }
+.kv { display: inline-block; margin: 6px 22px 0 0; }
+.kv b { display: block; font-size: 24px; } .kv small { font-size: 11px; color: #7a675a; font-weight: 700; }
+.form { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; padding: 9px 0; border-bottom: 1px solid #3a2c22; font-size: 14px; }
+.form:last-child { border-bottom: 0; }
+.form .r { width: 30px; font-weight: 700; } .form .win { color: #ff8c1a; } .form .loss { color: #e5484d; }
+.form .m { -webkit-flex: 1; flex: 1; } .form .x { width: 70px; text-align: right; color: #b2a397; }
+
+/* clips */
+.cgrid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin-right: -10px; }
+.clip { width: 322px; margin: 0 10px 10px 0; background: #1b1410; border: 1px solid #3a2c22; border-radius: 8px; overflow: hidden; }
+.clip.new { border-color: #ff8c1a; }
+.clip .th { height: 181px; background: #0d0907; position: relative; }
+.clip .th img { width: 100%; height: 100%; display: block; }
+.clip .badge { position: absolute; left: 8px; top: 8px; padding: 3px 7px; border-radius: 4px; background: #ff8c1a; color: #120d0a; font-size: 11px; font-weight: 700; }
+.clip .badge.kept { background: #3a2c22; color: #d8cbbf; }
+.clip .meta { padding: 8px 10px 0; font-size: 12px; color: #b2a397; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clip .meta b { color: #d8cbbf; }
+.clip .btnrow { margin: 8px 10px 10px; }
+.clip .btn { height: 40px; line-height: 38px; }
+
+/* system */
+.slrow { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; height: 88px; margin-bottom: 10px; background: #1b1410; border: 1px solid #3a2c22; border-radius: 8px; padding: 0 14px; }
+.slrow .k { width: 90px; font-weight: 700; font-size: 15px; }
+.sl { -webkit-flex: 1; flex: 1; height: 60px; position: relative; }
+.sl .tr { position: absolute; left: 0; right: 0; top: 24px; height: 12px; border-radius: 6px; background: #120d0a; border: 1px solid #3a2c22; overflow: hidden; }
+.sl .fl { position: absolute; left: 0; top: 0; bottom: 0; background: #ff4d1f; background: -webkit-linear-gradient(left, #ff4d1f, #ff8c1a); background: linear-gradient(to right, #ff4d1f, #ff8c1a); }
+.sl .kn { position: absolute; top: 14px; width: 32px; height: 32px; margin-left: -16px; border-radius: 16px; background: #d8cbbf; border: 3px solid #ff8c1a; }
+.slrow .pv { width: 64px; text-align: right; font-weight: 700; font-size: 18px; }
+.slrow .btn { margin-left: 14px; width: 84px; }
+.slrow.muted .fl { background: #3a2c22; } .slrow.muted .kn { border-color: #7a675a; }
+
+.dg { margin-bottom: 12px; }
+.dgrid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin-right: -10px; }
+.dgrid .t { width: 232px; height: 92px; margin: 0 10px 10px 0; }
+.dgrid .t .v { font-size: 16px; white-space: normal; }
+
+.empty { color: #7a675a; font-size: 13px; padding: 14px 4px; }
+#toast { position: fixed; left: 50%; bottom: 22px; width: 560px; margin-left: -280px; padding: 14px 18px; border-radius: 8px; background: #2a1414; border: 1px solid #e5484d; color: #d8cbbf; font-size: 14px; opacity: 0; -webkit-transition: opacity .2s; transition: opacity .2s; pointer-events: none; z-index: 50; }
+#toast.ok { background: #241811; border-color: #ff8c1a; }
+#toast.show { opacity: 1; }
+
+.callrow { height: 70px; margin-bottom: 0; padding-right: 8px; margin-top: 8px; }
+.pchip { display: inline-block; vertical-align: top; width: 58px; text-align: center; margin-right: 6px; }
+.pchip .av { margin: 0 auto; width: 44px; height: 44px; line-height: 44px; border-radius: 22px; border-width: 3px; }
+.pchip .nm { font-size: 10px; font-weight: 700; color: #b2a397; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.pchip.lm .av { opacity: .35; border-color: #e5484d; }
+.pchip.lm .nm { color: #e5484d; }
+#pmenu { background: rgba(0,0,0,.72); z-index: 45; }
+.pm { width: 620px; margin: 150px auto 0; background: #1b1410; border: 1px solid #ff8c1a; border-radius: 10px; padding: 20px; text-align: left; }
+.pm .hd { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; margin-bottom: 16px; }
+.pm .hd .av { width: 64px; height: 64px; line-height: 64px; border-radius: 32px; font-size: 22px; }
+.pm .hd .nm { margin-left: 16px; -webkit-flex: 1; flex: 1; min-width: 0; }
+.pm .hd .nm b { display: block; font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm .hd .nm small { font-size: 13px; color: #7a675a; }
+.pm .slrow { margin-bottom: 14px; }
+.pm .btnrow > .btn { height: 54px; line-height: 52px; }
+
+/* overlays */
+.ov { position: fixed; left: 0; top: 0; right: 0; bottom: 0; display: none; z-index: 40; text-align: center; }
+.ov.show { display: block; }
+#bomb { background: #1a0606; }
+#bomb .t1 { margin-top: 110px; font-size: 26px; font-weight: 700; color: #e5484d; }
+#bomb .t2 { font-size: 220px; font-weight: 700; color: #e5484d; line-height: 1.1; }
+#bomb .t3 { font-size: 22px; font-weight: 700; color: #d8cbbf; }
+#bomb .t4 { font-size: 13px; color: #7a675a; margin-top: 10px; }
+#bomb.late .t2 { color: #ff8c1a; }
+#bombbar { position: absolute; left: 0; bottom: 0; height: 18px; background: #e5484d; }
+#found { background: #ff8c1a; color: #120d0a; -webkit-transition: background .25s; transition: background .25s; }
+#found.dim { background: #120d0a; color: #ff8c1a; }
+#found .t1 { margin-top: 230px; font-size: 64px; font-weight: 700; }
+#found .t2 { font-size: 24px; font-weight: 700; margin-top: 10px; }
+#idle { background: #000; color: #d8cbbf; }
+#idle .clk { margin-top: 140px; font-size: 200px; font-weight: 700; color: #ff8c1a; line-height: 1; }
+#idle .date { font-size: 22px; color: #7a675a; margin-top: 8px; }
+#idle .song { font-size: 24px; font-weight: 700; margin-top: 70px; padding: 0 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#idle .art { font-size: 16px; color: #b2a397; margin-top: 6px; }
+#idle .match { font-size: 30px; font-weight: 700; color: #b2a397; margin-top: 40px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" id="brand"><div class="dot"></div>MAGI</div>
+  <div class="tabs" id="tabs">
+    <div class="tab sel" data-tab="control">CONTROL</div><div class="tab" data-tab="discord">DISCORD</div><div class="tab" data-tab="stream">STREAM</div><div class="tab" data-tab="game">GAME</div><div class="tab" data-tab="clips" id="tab-clips">CLIPS</div><div class="tab" data-tab="system">SYSTEM</div><div class="tab" data-tab="deck">DECK</div>
+  </div>
+  <div class="spacer"></div>
+  <div id="perfmini"></div>
+  <div id="clock">--:--</div>
+</header>
+
+<!-- CONTROL -->
+<main id="control">
+  <div class="col grow">
+    <div class="lbl">DISCORD &amp; NETWORK</div>
+    <div class="row">
+      <div class="t" data-act="deafen" id="t-deaf"><div class="k">DEAFEN</div><div class="ic">&#xf025;</div><div><div class="v">—</div><div class="s">discord</div></div></div>
+      <div class="t" data-act="camera" id="t-cam"><div class="k">CAMERA</div><div class="ic">&#xf03d;</div><div><div class="v">—</div><div class="s">discord</div></div></div>
+      <div class="t" data-act="dstream" id="t-scr"><div class="k">SCREENSHARE</div><div class="ic">&#xf108;</div><div><div class="v">—</div><div class="s">discord go live</div></div></div>
+      <div class="t" data-act="vpn" id="t-vpn"><div class="k">VPN</div><div class="ic">&#xf132;</div><div><div class="v">—</div><div class="s">mullvad</div></div></div>
+    </div>
+    <div class="row r2">
+      <div class="t" data-hold="dleave" id="t-leave"><div class="k">LEAVE CALL</div><div class="ic">&#xf095;</div><div><div class="v">HOLD</div><div class="s">discord</div></div></div>
+      <div class="t" data-act="privacy" id="t-priv"><div class="k">PRIVACY</div><div class="ic">&#xf06e;</div><div><div class="v">—</div><div class="s">hide screen on stream 10 s</div></div></div>
+      <div class="t" data-act="stream-mic" id="t-smic"><div class="k">STREAM MIC</div><div class="ic">&#xf130;</div><div><div class="v">—</div><div class="s">stream only</div></div></div>
+    </div>
+    <div class="lbl">VOLUME · EMBER BUSES</div>
+    <div id="csliders" class="compact"></div>
+    <div class="slrow callrow" id="callrow"><div class="k">CALL</div><div class="grow hscroll" id="cpeople" data-scroll="1"></div></div>
+  </div>
+  <div class="col right">
+    <div class="lbl">STREAM</div>
+    <div class="card" id="air"><div class="lbl" style="margin:0">TWITCH · OBS</div><div class="big" id="airbig">OFF AIR</div><div class="sub" id="airsub">—</div></div>
+    <div class="hold" data-golive="1"><div class="fill"></div><span class="holdtxt">HOLD TO GO LIVE</span></div>
+    <div class="btnrow"><div class="btn" data-act="twitch-clip">TWITCH CLIP &#x2192; VOICE CHAT</div></div>
+    <div class="lbl">SCENES</div>
+    <div class="col grow" id="scenes"></div>
+  </div>
+</main>
+
+<!-- DISCORD -->
+<main id="discord" class="hide">
+  <div class="col grow">
+    <div class="lbl" id="vlbl">VOICE CHANNELS</div>
+    <div class="hscroll" id="guilds" data-scroll="1" style="height:58px;margin-bottom:8px"></div>
+    <div class="grow scroll" id="vchans" data-scroll="1"></div>
+    <div class="lbl" style="margin-top:8px">SOUNDBOARD · PLAYS IN YOUR CALL</div>
+    <div class="scroll sgrid" id="sounds" data-scroll="1" style="height:194px"></div>
+  </div>
+  <div class="col" style="width:380px;margin-left:12px">
+    <div class="lbl" id="plbl">IN YOUR CALL</div>
+    <div class="grow scroll" id="people" data-scroll="1"></div>
+    <div class="lbl" style="margin-top:8px">STATUS</div>
+    <div class="btnrow" id="stat4">
+      <div class="btn" data-act="dstatus" data-arg='"online"'>ONLINE</div><div class="btn" data-act="dstatus" data-arg='"idle"'>IDLE</div><div class="btn" data-act="dstatus" data-arg='"dnd"'>DND</div><div class="btn" data-act="dstatus" data-arg='"invisible"'>INVIS</div>
+    </div>
+    <div id="customs"></div>
+  </div>
+</main>
+
+<!-- STREAM -->
+<main id="stream" class="hide">
+  <div class="col grow">
+    <div class="card" id="hair"><div class="lbl" style="margin:0">TWITCH · OBS</div><div class="big" id="hbig">OFF AIR</div><div class="sub" id="hsub">—</div></div>
+    <div class="hgrid" id="hgrid"></div>
+    <div class="btnrow">
+      <div class="btn" data-act="privacy" id="b-priv">PRIVACY 10 S</div>
+      <div class="btn" data-act="stream-mic" id="b-smic">STREAM MIC</div>
+      <div class="btn" data-act="twitch-clip">TWITCH CLIP</div>
+    </div>
+    <div class="hold" data-golive="1"><div class="fill"></div><span class="holdtxt">HOLD TO GO LIVE</span></div>
+  </div>
+  <div class="col" style="width:330px;margin-left:12px">
+    <div class="lbl" id="wlbl">WATCHING YOUR DISCORD STREAM</div>
+    <div class="grow scroll card" id="viewers" data-scroll="1"></div>
+  </div>
+</main>
+
+<!-- GAME -->
+<main id="game" class="hide">
+  <div class="col grow">
+    <div class="lbl">MATCH</div>
+    <div class="card" id="match"></div>
+    <div class="lbl">PERFORMANCE</div>
+    <div class="hgrid" id="pgrid"></div>
+  </div>
+  <div class="col" style="width:360px;margin-left:12px">
+    <div class="lbl">LEETIFY · RECENT MATCHES</div>
+    <div class="card grow scroll" id="leet" data-scroll="1"></div>
+  </div>
+</main>
+
+<!-- CLIPS -->
+<main id="clips" class="hide" style="position:relative">
+  <div class="scroll" data-scroll="1" style="position:absolute;left:0;top:0;right:0;bottom:0"><div class="cgrid" id="cgrid"></div></div>
+</main>
+
+<!-- SYSTEM -->
+<main id="system" class="hide">
+  <div class="col grow">
+    <div class="lbl">VOLUME · EMBER BUSES</div>
+    <div id="sliders"></div>
+    <div class="lbl" style="margin-top:6px">FANS</div>
+    <div class="card"><div class="sub" style="white-space:normal">Fan profiles need a CoolerControl access token (Settings → Access Tokens), saved as <b>coolercontrol_token</b> in ~/.config/ember/pad.toml.</div></div>
+  </div>
+</main>
+
+<main id="deck" class="hide" style="position:relative"><div class="scroll" data-scroll="1" id="deckbox" style="position:absolute;left:0;top:0;right:0;bottom:0"></div></main>
+
+<div class="ov" id="bomb"><div class="t1" id="bombh">BOMB PLANTED</div><div class="t2" id="bombt">40.0</div><div class="t3" id="bombs"></div><div class="t4" id="bombsrc"></div><div id="bombbar"></div></div>
+<div class="ov" id="found"><div class="t1">MATCH LOADING</div><div class="t2" id="foundmap"></div></div>
+<div class="ov" id="idle"><div class="clk" id="iclk"></div><div class="date" id="idate"></div><div class="song" id="isong"></div><div class="art" id="iart"></div><div class="match" id="imatch"></div></div>
+<div class="ov" id="pmenu"><div class="pm" id="pmbox"></div></div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  var KEY = '';
+  var m = /[?&]k=([0-9a-f]+)/.exec(location.search);
+  try { if (m) localStorage.setItem('padkey', m[1]); KEY = (m && m[1]) || localStorage.getItem('padkey') || ''; } catch (e) { KEY = m ? m[1] : ''; }
+
+  var S = null, D = null, CL = null, lastOk = 0, TAB = 'control', selGuild = null;
+  var sig = {};
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function setHTML(id, key, html) { if (sig[key] === html) return; sig[key] = html; $(id).innerHTML = html; }
+  function xhr(method, url, body, cb, timeout) {
+    var r = new XMLHttpRequest(), t0 = Date.now();
+    r.open(method, url, true);
+    r.timeout = timeout || (method === 'POST' ? 20000 : 5000);
+    if (KEY) r.setRequestHeader('X-Pad-Key', KEY);
+    if (body) r.setRequestHeader('Content-Type', 'application/json');
+    r.onreadystatechange = function () {
+      if (r.readyState !== 4) return;
+      var v = null;
+      try { v = JSON.parse(r.responseText); } catch (e) {}
+      cb(r.status === 200 ? v : null, r.status, t0);
+    };
+    r.send(body ? JSON.stringify(body) : null);
+  }
+  var toastT = null;
+  function toast(msg, ok) {
+    var t = $('toast'); t.textContent = msg; t.className = 'show' + (ok ? ' ok' : '');
+    clearTimeout(toastT); toastT = setTimeout(function () { t.className = ''; }, 3500);
+  }
+  function act(id, arg) {
+    xhr('POST', '/api/act', { id: id, arg: arg === undefined ? null : arg }, function (v, st) {
+      if (!v) toast(st === 401 ? 'Key rejected: open the address from ember-pad url again.' : 'the desktop did not answer');
+      else if (v.ok === false) toast(v.err || 'failed');
+      else if (v.note) toast(v.note, true);
+      else if (v.lastErr) toast(v.lastErr);
+      setTimeout(poll, 250);
+      if (TAB === 'discord' || TAB === 'stream') setTimeout(pollDiscord, 300);
+      if (TAB === 'control') setTimeout(pollPeople, 300);
+      if (TAB === 'clips') setTimeout(pollClips, 600);
+    });
+  }
+  function img(u) { return '/img?u=' + encodeURIComponent(u); }
+  function initials(n) { n = String(n || '?'); var p = n.split(/\s+/); return (p[0].charAt(0) + (p[1] ? p[1].charAt(0) : n.charAt(1) || '')).toUpperCase(); }
+  function avatar(p, cls) {
+    return '<div class="av' + (cls ? ' ' + cls : '') + (p.speaking ? ' speak' : '') + '">' + (p.avatar ? '<img src="' + esc(img(p.avatar)) + '">' : esc(initials(p.name))) + '</div>';
+  }
+
+  // ── touch ──
+  function closest(el, attr) {
+    while (el && el !== document.body && el !== document) { if (el.getAttribute && el.getAttribute(attr) !== null) return el; el = el.parentNode; }
+    return null;
+  }
+  function within(el, node) { while (el) { if (el === node) return true; el = el.parentNode; } return false; }
+  function argOf(el) { var a = el.getAttribute('data-arg'); if (a === null) return undefined; try { return JSON.parse(a); } catch (e) { return a; } }
+  var press = null;
+  function pt(e) { var t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]) || e; return t.clientX; }
+  function ptY(e) { var t = (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]) || e; return t.clientY; }
+  function slide(el, x, send) {
+    var r = el.getBoundingClientRect(), f = Math.max(0, Math.min(1, (x - r.left) / r.width));
+    var user = el.getAttribute('data-user'), max = user ? 200 : 100, pct = Math.round(f * max);
+    el.querySelector('.fl').style.width = (f * 100) + '%'; el.querySelector('.kn').style.left = (f * 100) + '%';
+    el.parentNode.querySelector('.pv').textContent = pct + '%';
+    var now = Date.now();
+    if (send || now - (el._sent || 0) > 180) {
+      el._sent = now;
+      if (user) { act('dvol', { id: user, vol: pct }); pmVol[user] = { vol: pct, at: now }; }
+      else act('vol', { bus: el.getAttribute('data-bus'), pct: pct });
+    }
+  }
+  function down(e) {
+    if ($('idle').className.indexOf('show') >= 0) { hideIdleUntil = Date.now() + 60000; $('idle').className = 'ov'; press = { swallow: true }; return; }
+    if (within(e.target, $('bomb'))) { bombHidden = B && B.gsi ? B.gen + ':' + B.deadline : 'o' + (S && S.cs2 && S.cs2.bomb_at); $('bomb').className = 'ov'; press = { swallow: true }; return; }
+    if (pmOpen && !within(e.target, $('pmbox'))) { closeMenu(); press = { swallow: true }; return; }
+    var sl = closest(e.target, 'data-sl');
+    if (sl) { press = { slider: sl }; sliding = true; slide(sl, pt(e)); return; }
+    var hold = closest(e.target, 'data-golive');
+    if (hold) {
+      press = { hold: hold, t: setTimeout(function () { press = null; hold.className = hold.className.replace(' go', ''); act(S && S.obs && S.obs.streaming ? 'endstream' : 'golive'); }, 800) };
+      hold.className += ' go';
+      return;
+    }
+    var el = closest(e.target, 'data-person') || closest(e.target, 'data-act') || closest(e.target, 'data-hold') || closest(e.target, 'data-scene') || closest(e.target, 'data-deck') || closest(e.target, 'data-tab') || closest(e.target, 'data-guild');
+    if (!el) return;
+    var tile = el.className.indexOf('split') >= 0 ? el.parentNode : el;
+    tile.className += ' down';
+    press = { el: el, tile: tile, held: false, x: pt(e), y: ptY(e) };
+    if (el.getAttribute('data-hold')) {
+      press.t = setTimeout(function () { if (press && press.el === el) { press.held = true; act(el.getAttribute('data-hold'), argOf(el)); } }, 650);
+    }
+  }
+  var sliding = false;
+  function up(e, cancel) {
+    if (!press) return;
+    var p = press; press = null;
+    clearTimeout(p.t);
+    if (p.swallow) return;
+    if (p.slider) { sliding = false; if (!cancel) slide(p.slider, pt(e), true); return; }
+    if (p.hold) { p.hold.className = p.hold.className.replace(' go', ''); return; }
+    p.tile.className = p.tile.className.replace(/ down/g, '');
+    if (cancel || p.held) return;
+    if (Math.abs(pt(e) - p.x) > 30 || Math.abs(ptY(e) - p.y) > 30) return; // a swipe through a scroll list, not a tap
+    var el = p.el;
+    if (el.getAttribute('data-tab')) return tab(el.getAttribute('data-tab'));
+    if (el.getAttribute('data-person')) return openMenu(el.getAttribute('data-person'));
+    if (el.getAttribute('data-guild')) { selGuild = el.getAttribute('data-guild'); return renderDiscord(); }
+    if (el.getAttribute('data-scene')) return act('scene', el.getAttribute('data-scene'));
+    if (el.getAttribute('data-deck')) return act('deck', parseInt(el.getAttribute('data-deck'), 10));
+    var id = el.getAttribute('data-act');
+    if (!id) return toast('Hold to confirm.');
+    if (id === 'pm-close') return closeMenu();
+    if (id === 'dvol') { var aa = argOf(el); pmVol[aa.id] = { vol: aa.vol, at: Date.now() }; }
+    act(id, argOf(el));
+  }
+  var touch = 'ontouchstart' in window;
+  document.addEventListener(touch ? 'touchstart' : 'mousedown', down, false);
+  document.addEventListener(touch ? 'touchend' : 'mouseup', function (e) { if (touch) e.preventDefault(); up(e, false); }, false);
+  if (touch) document.addEventListener('touchcancel', function (e) { up(e, true); }, false);
+  document.addEventListener(touch ? 'touchmove' : 'mousemove', function (e) {
+    if (press && press.slider) { e.preventDefault(); slide(press.slider, pt(e)); return; }
+    if (!touch) return;
+    if (!closest(e.target, 'data-scroll')) e.preventDefault();
+    else if (press && press.tile && (Math.abs(pt(e) - press.x) > 12 || Math.abs(ptY(e) - press.y) > 12)) { press.tile.className = press.tile.className.replace(/ down/g, ''); clearTimeout(press.t); press = null; }
+  }, false);
+
+  function tab(name) {
+    TAB = name;
+    var tabs = document.querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].className = 'tab' + (tabs[i].getAttribute('data-tab') === name ? ' sel' : '') + (tabs[i].id === 'tab-clips' && newClips ? ' ping' : '');
+    var mains = document.getElementsByTagName('main');
+    for (var j = 0; j < mains.length; j++) mains[j].className = mains[j].id === name ? '' : 'hide';
+    if (name === 'deck') buildDeck();
+    if (name === 'discord' || name === 'stream') pollDiscord();
+    if (name === 'clips') pollClips();
+    render();
+  }
+
+  function buildDeck() {
+    xhr('GET', '/api/deck', null, function (list) {
+      if (!list) return;
+      var groups = {}, order = [], html = '';
+      for (var i = 0; i < list.length; i++) {
+        var g = list[i].group || 'OTHER';
+        if (!groups[g]) { groups[g] = []; order.push(g); }
+        groups[g].push(list[i]);
+      }
+      for (var j = 0; j < order.length; j++) {
+        html += '<div class="dg"><div class="lbl">' + esc(order[j]) + '</div><div class="dgrid">';
+        for (var n = 0; n < groups[order[j]].length; n++) {
+          var a = groups[order[j]][n];
+          html += '<div class="t" data-deck="' + a.i + '"><div class="k">' + esc(a.key ? 'KEY ' + a.key.toUpperCase() : '') + '</div><div class="v">' + esc(a.label) + '</div></div>';
+        }
+        html += '</div></div>';
+      }
+      $('deckbox').innerHTML = html;
+    });
+  }
+
+  // ── render helpers ──
+  function tile(id, cls, v, s, ic) {
+    var t = $(id); if (!t) return;
+    var keep = t.className.indexOf(' down') >= 0 ? ' down' : '';
+    t.className = (/(^| )q( |$)/.test(t.className) ? 't q' : 't') + (cls ? ' ' + cls : '') + keep;
+    var q = t.querySelector('.v'); if (q && v !== null) q.textContent = v;
+    var w = t.querySelector('.s'); if (w && s !== null && s !== undefined) w.textContent = s;
+    var i = t.querySelector('.ic'); if (i && ic) i.innerHTML = ic;
+  }
+  function hms(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), mn = Math.floor(s / 60) % 60, x = s % 60;
+    return (h ? h + ':' + (mn < 10 ? '0' : '') : '') + mn + ':' + (x < 10 ? '0' : '') + x;
+  }
+  function n(v, d) { return v === null || v === undefined ? '—' : (d !== undefined ? Number(v).toFixed(d) : Math.round(v)); }
+  function ago(t) { var s = Math.max(0, Date.now() / 1000 - t); return s < 90 ? 'just now' : s < 5400 ? Math.round(s / 60) + ' min ago' : s < 129600 ? Math.round(s / 3600) + ' h ago' : Math.round(s / 86400) + ' d ago'; }
+  function mapName(m) { return String(m || '').replace(/^de_|^cs_|^ar_/, '').toUpperCase(); }
+
+  function render() {
+    if (!S) return;
+    renderControl(); renderPerfMini(); renderOverlays();
+    if (TAB === 'stream') renderStream();
+    if (TAB === 'game') renderGame();
+    if (TAB === 'system') renderSystem();
+    if (TAB === 'discord') renderDiscord();
+  }
+
+  function renderControl() {
+    var d = S.discord || {}, now = Date.now();
+    var mic = S.mic && S.mic.muted;
+    var dOff = !d.ok, why = dOff ? (d.err && d.err.indexOf('offline') === 0 ? 'restart discord to link' : (d.err || 'discord?')) : null;
+    tile('t-deaf', dOff ? 'off' : (d.deaf ? 'alert' : ''), dOff ? 'OFFLINE' : (d.deaf ? 'DEAFENED' : 'HEARING'), dOff ? why : (d.mute ? 'discord · self-muted' : 'discord'));
+    tile('t-cam', dOff || !d.voice ? 'off' : (d.video ? 'on' : ''), dOff ? 'OFFLINE' : (!d.voice ? 'NOT IN VOICE' : (d.video ? 'ON' : 'OFF')), 'discord');
+    var scr = S.screens || {}, onSide = d.streaming && d.screen && d.screen === scr.side;
+    tile('t-scr', dOff || !d.voice ? 'off' : (d.streaming && !onSide ? 'on' : ''), dOff ? 'OFFLINE' : (!d.voice ? 'NOT IN VOICE' : (d.streaming ? (onSide ? 'STOP SIDE' : 'SHARING') : 'OFF')), d.streaming ? (d.viewers || 0) + ' watching' : 'discord · main screen');
+    tile('t-leave', dOff || !d.voice ? 'off' : '', dOff ? 'OFFLINE' : (!d.voice ? 'NOT IN VOICE' : 'HOLD'), null);
+    var h = S.health || {};
+    var hOk = h.ok !== false && h.streaming !== undefined;
+    tile('t-priv', !hOk ? 'off' : (h.privacy ? 'alert' : ''), !hOk ? 'NO OBS' : (h.privacy ? 'HIDDEN · TAP TO SHOW' : 'SHOWN'));
+    tile('t-smic', !hOk || h.mic_muted === null || h.mic_muted === undefined ? 'off' : (h.mic_muted ? 'alert' : ''), !hOk ? 'NO OBS' : (h.mic_muted ? 'MUTED' : 'ON STREAM'));
+    $('b-priv').className = 'btn' + (h.privacy ? ' alert' : '');
+    $('b-priv').textContent = h.privacy ? 'SHOW SCREEN NOW' : 'PRIVACY 10 S';
+    $('b-priv').setAttribute('data-arg', h.privacy ? 'false' : 'true');
+    $('t-priv').setAttribute('data-arg', h.privacy ? 'false' : 'true');
+    $('b-smic').className = 'btn' + (h.mic_muted ? ' alert' : '');
+    $('b-smic').textContent = h.mic_muted ? 'STREAM MIC MUTED' : 'STREAM MIC ON';
+
+    var vs = (S.vpn && S.vpn.state) || '?', city = (S.vpn && S.vpn.city) || '';
+    var vcls = S.vpn && S.vpn.blocked ? 'alert' : (vs === 'connected' ? 'on' : (vs === 'connecting' ? 'gold' : ''));
+    tile('t-vpn', vcls, S.vpn && S.vpn.blocked ? 'BLOCKED' : (vs === 'connected' ? (city ? city.toUpperCase() : 'ON') : (vs === 'connecting' ? 'CONNECTING' : 'OFF')), 'mullvad');
+    renderSliders('csliders', true);
+    renderCall();
+
+    var o = S.obs || {}, live = o.streaming === true, tw = S.twitch || {};
+    $('air').className = 'card' + (live ? ' live' : '');
+    $('airbig').textContent = !o.overlay ? 'NO OVERLAY' : (!o.connected ? 'OBS OFFLINE' : (live ? 'ON AIR ' + hms(now - (o.since || now)) : 'OFF AIR'));
+    $('airsub').textContent = (o.scene ? 'scene · ' + o.scene : '—') + (live && tw.viewers !== null && tw.viewers !== undefined ? ' · ' + tw.viewers + ' viewers' : '');
+    var holds = document.querySelectorAll('[data-golive]');
+    for (var k = 0; k < holds.length; k++) {
+      if (holds[k].className.indexOf(' go') >= 0) continue;
+      holds[k].className = 'hold' + (live ? ' end' : '');
+      holds[k].querySelector('.holdtxt').textContent = live ? 'HOLD TO END STREAM' : 'HOLD TO GO LIVE';
+    }
+    var list = S.scenes || [], html = '';
+    for (var i = 0; i < list.length; i++) html += '<div class="sc' + (list[i] === o.scene ? ' cur' : '') + '" data-scene="' + esc(list[i]) + '">' + esc(list[i].toUpperCase()) + '</div>';
+    setHTML('scenes', 'scenes', html);
+  }
+
+  function renderPerfMini() {
+    var p = S.perf || {}, parts = [];
+    if (p.fps !== null && p.fps !== undefined) parts.push('<b>' + n(p.fps) + '</b> FPS');
+    if (p.gpu_temp !== null && p.gpu_temp !== undefined) parts.push('GPU <b' + (p.gpu_temp > 85 ? ' class="bad"' : '') + '>' + n(p.gpu_temp) + '°</b>');
+    if (p.cpu_temp !== null && p.cpu_temp !== undefined) parts.push('CPU <b' + (p.cpu_temp > 88 ? ' class="bad"' : '') + '>' + n(p.cpu_temp) + '°</b>');
+    if (p.ping !== null && p.ping !== undefined) parts.push('<b' + (p.ping > 40 ? ' class="bad"' : '') + '>' + n(p.ping) + '</b> MS');
+    if (p.loss) parts.push('<b class="bad">' + n(p.loss * 100, 1) + '%</b> LOSS');
+    setHTML('perfmini', 'perfmini', parts.join(' · '));
+  }
+
+  var bombHidden = null, hideIdleUntil = 0, B = null;
+  function renderOverlays() {
+    var c = S.cs2 || {}, now = snow();
+    // Our own GSI feed (exact) when CS2 has loaded gamestate_integration_ember_pad.cfg, else the overlay's 1 s view.
+    var exact = B && B.gsi, planted, deadline, defuse = 0, key;
+    if (exact) {
+      planted = B.state === 'planted' && B.deadline && now < B.deadline + 2000;
+      deadline = B.deadline; defuse = B.defuse_deadline; key = B.gen + ':' + B.deadline;
+    } else {
+      planted = c.bomb === 'planted' && c.bomb_at && now - c.bomb_at < 42000;
+      deadline = c.bomb_at + 40000; key = 'o' + c.bomb_at;
+    }
+    var bo = $('bomb');
+    if (planted && bombHidden !== key) {
+      var left = Math.max(0, (deadline - now) / 1000), shown = Math.floor(left * 10) / 10;
+      bo.className = 'ov show' + (left < 10 ? '' : ' late');
+      $('bombt').textContent = shown.toFixed(1);
+      $('bombbar').style.width = Math.min(100, left / 40 * 100) + '%';
+      var dl = defuse ? Math.max(0, (defuse - now) / 1000) : 0;
+      if (defuse && dl > 0) {
+        $('bombh').textContent = 'DEFUSING · ' + (Math.floor(dl * 10) / 10).toFixed(1) + (dl < left ? ' · MAKES IT' : ' · TOO LATE');
+      } else {
+        $('bombh').textContent = 'BOMB PLANTED';
+      }
+      $('bombs').textContent = left >= 10 ? 'NO-KIT DEFUSE OK · ' + (left - 10).toFixed(1) + ' s spare'
+        : left >= 5 ? 'KIT ONLY · ' + (left - 5).toFixed(1) + ' s spare' : 'NO TIME TO DEFUSE';
+      $('bombsrc').textContent = exact ? (B.src === 'countdown' ? 'synced to the game clock' : 'synced to the plant') : 'estimate: restart CS2 once for the exact timer';
+    } else {
+      bo.className = 'ov';
+    }
+    var fo = $('found');
+    if (c.found_at && now - c.found_at < 9000 && now - c.found_at > -2000) {
+      fo.className = 'ov show' + (Math.floor((now - c.found_at) / 600) % 2 ? ' dim' : '');
+      $('foundmap').textContent = mapName(c.map) + (c.mode ? ' · ' + String(c.mode).toUpperCase() : '');
+    } else {
+      fo.className = 'ov';
+    }
+    var idle = $('idle');
+    if (S.away && now > hideIdleUntil && !planted) {
+      if (idle.className.indexOf('show') < 0) idle.className = 'ov show';
+      var dt = new Date(), hh = dt.getHours(), mm = dt.getMinutes();
+      $('iclk').textContent = (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
+      var days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+      $('idate').textContent = days[dt.getDay()] + ' · ' + dt.getDate() + '/' + (dt.getMonth() + 1);
+      var md = S.media || {};
+      $('isong').textContent = md.title && md.status === 'Playing' ? '♪ ' + md.title : '';
+      $('iart').textContent = md.title && md.status === 'Playing' ? (md.artist || md.player || '') : '';
+      $('imatch').textContent = c.active ? mapName(c.map) + '   CT ' + n(c.score_ct) + ' : ' + n(c.score_t) + ' T' : '';
+    } else if (idle.className.indexOf('show') >= 0) {
+      idle.className = 'ov';
+    }
+  }
+
+  function renderStream() {
+    var o = S.obs || {}, h = S.health || {}, tw = S.twitch || {}, now = Date.now(), live = o.streaming === true;
+    $('hair').className = 'card' + (live ? ' live' : '');
+    $('hbig').textContent = !o.connected ? 'OBS OFFLINE' : (live ? 'ON AIR ' + hms(now - (o.since || now)) : 'OFF AIR');
+    $('hsub').textContent = tw.title ? tw.title : '—';
+    var drop = h.total ? h.skipped / h.total * 100 : null, rlag = h.render_total ? h.render_skipped / h.render_total * 100 : null;
+    var cells = [
+      ['VIEWERS', live ? n(tw.viewers) : '—', (tw.followers || 0) + ' followers', null],
+      ['BITRATE', live && h.kbps !== null ? n(h.kbps) : '—', 'kbps', live && h.kbps !== null ? (h.kbps < 4000 ? 'bad' : 'good') : null],
+      ['DROPPED', drop === null ? '—' : n(drop, 2) + '%', live ? n(h.skipped) + ' frames (network)' : 'network', drop !== null && drop > 1 ? 'bad' : null],
+      ['RENDER LAG', rlag === null ? '—' : n(rlag, 2) + '%', 'obs render', rlag !== null && rlag > 1 ? 'bad' : null],
+      ['CONGESTION', h.congestion === null || h.congestion === undefined ? '—' : n(h.congestion * 100) + '%', h.reconnecting ? 'RECONNECTING' : 'upload pressure', (h.congestion > 0.4 || h.reconnecting) ? 'bad' : null],
+      ['OBS', h.fps ? n(h.fps) + ' fps' : '—', h.cpu !== undefined && h.cpu !== null ? 'cpu ' + n(h.cpu, 1) + '%' : '', null]
+    ];
+    var html = '';
+    for (var i = 0; i < cells.length; i++) html += '<div class="hcell' + (cells[i][3] ? ' ' + cells[i][3] : '') + '"><div class="k">' + cells[i][0] + '</div><div class="v">' + esc(cells[i][1]) + '</div><div class="s">' + esc(cells[i][2]) + '</div></div>';
+    setHTML('hgrid', 'hgrid', html);
+    var v = (D && D.viewers) || [], vh = '';
+    for (var j = 0; j < v.length; j++) vh += '<div class="viewer">' + avatar(v[j]) + esc(v[j].name) + '</div>';
+    $('wlbl').textContent = 'WATCHING YOUR DISCORD STREAM' + (S.discord && S.discord.streaming ? ' · ' + v.length : '');
+    setHTML('viewers', 'viewers', vh || '<div class="empty">' + (S.discord && S.discord.streaming ? 'Nobody yet.' : 'Not sharing a screen in Discord.') + '</div>');
+  }
+
+  function renderGame() {
+    var c = S.cs2 || {}, lf = S.leetify || {}, p = S.perf || {}, html = '';
+    if (c.active) {
+      var t = c.team === 'CT';
+      html = '<div class="sub">' + esc(mapName(c.map)) + ' · ' + esc(String(c.mode || '').toUpperCase()) + ' · ROUND ' + n(c.round) + ' · ' + esc(String(c.round_phase || c.phase || '').toUpperCase()) + (c.bomb ? ' · BOMB ' + esc(String(c.bomb).toUpperCase()) : '') + '</div>' +
+        '<div class="score"><span class="' + (t ? 'mine' : 'ct') + '">CT ' + n(c.score_ct) + '</span> : <span class="' + (!t ? 'mine' : 'tt') + '">' + n(c.score_t) + ' T</span></div>' +
+        '<div><span class="kv"><b>' + n(c.kills) + ' / ' + n(c.assists) + ' / ' + n(c.deaths) + '</b><small>K / A / D</small></span><span class="kv"><b>' + n(c.mvps) + '</b><small>MVP</small></span><span class="kv"><b>' + n(c.hs_pct) + '%</b><small>HS</small></span><span class="kv"><b>' + n(c.adr) + '</b><small>ADR</small></span><span class="kv"><b>' + n(c.health) + '</b><small>HP</small></span></div>';
+    } else {
+      var f = lf.form && lf.form[0];
+      html = '<div class="big" style="color:#b2a397">NOT IN A MATCH</div>' + (f ? '<div class="sub">Last: ' + esc(mapName(f.map)) + ' · ' + esc(String(f.outcome || '').toUpperCase()) + (f.score ? ' ' + f.score[0] + '–' + f.score[1] : '') + '</div>' : '');
+    }
+    setHTML('match', 'match', html);
+    var cells = [
+      ['FPS', n(p.fps), p.frametime ? n(p.frametime, 1) + ' ms frame' : 'mangohud log', null],
+      ['GPU', p.gpu === undefined || p.gpu === null ? '—' : n(p.gpu) + '%', (p.gpu_temp !== null && p.gpu_temp !== undefined ? n(p.gpu_temp) + '°C · ' : '') + (p.gpu_power ? n(p.gpu_power) + ' W' : ''), p.gpu_temp > 85 ? 'bad' : null],
+      ['CPU', p.cpu === undefined || p.cpu === null ? '—' : n(p.cpu) + '%', p.cpu_temp !== null && p.cpu_temp !== undefined ? n(p.cpu_temp) + '°C' : '', p.cpu_temp > 88 ? 'bad' : null],
+      ['PING', p.ping === null || p.ping === undefined ? '—' : n(p.ping, 1), 'ms · jitter ' + n(p.jitter, 1), p.ping > 40 ? 'bad' : null],
+      ['LOSS', p.loss === null || p.loss === undefined ? '—' : n(p.loss * 100, 1) + '%', 'packet loss', p.loss > 0 ? 'bad' : null],
+      ['RAM', p.ram_used ? n(p.ram_used, 1) : '—', 'of ' + n(p.ram_total) + ' GB', null]
+    ];
+    var ph = '';
+    for (var i = 0; i < cells.length; i++) ph += '<div class="hcell' + (cells[i][3] ? ' ' + cells[i][3] : '') + '"><div class="k">' + cells[i][0] + '</div><div class="v">' + esc(cells[i][1]) + '</div><div class="s">' + esc(cells[i][2]) + '</div></div>';
+    setHTML('pgrid', 'pgrid', ph);
+    var form = lf.form || [], lh = '';
+    for (var j = 0; j < form.length; j++) {
+      var g = form[j], w = g.outcome === 'win';
+      lh += '<div class="form"><span class="r ' + (w ? 'win' : 'loss') + '">' + (w ? 'W' : g.outcome === 'tie' ? 'T' : 'L') + '</span><span class="m">' + esc(mapName(g.map)) + (g.score ? ' · ' + g.score[0] + '–' + g.score[1] : '') + '</span><span class="x">' + (g.premier ? n(g.premier) : '') + '</span><span class="x">' + (g.rating !== undefined && g.rating !== null ? (g.rating > 0 ? '+' : '') + n(g.rating * 100, 1) : '') + '</span></div>';
+    }
+    lh += '<div class="sub" style="margin-top:12px">AIM <b>' + n(lf.aim) + '</b> · POSITIONING <b>' + n(lf.positioning) + '</b> · UTILITY <b>' + n(lf.utility) + '</b></div>';
+    setHTML('leet', 'leet', form.length ? lh : '<div class="empty">No Leetify data yet.</div>');
+  }
+
+  // ── people in the call (CONTROL) + their menu ──
+  var P = null, pmOpen = null, pmVol = {};
+  function pollPeople() {
+    xhr('GET', '/api/people', null, function (v) { if (v) { P = v; renderCall(); if (pmOpen) renderMenu(); } });
+  }
+  function personById(id) { var l = (P && P.people) || []; for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+  function renderCall() {
+    if (!$('cpeople')) return;
+    var l = (P && P.people) || [], h = '';
+    for (var i = 0; i < l.length; i++) {
+      var u = l[i];
+      h += '<div class="pchip' + (u.localMute ? ' lm' : '') + '" data-person="' + esc(u.id) + '">' + avatar(u) + '<div class="nm">' + esc(u.localMute ? 'MUTED' : u.name) + '</div></div>';
+    }
+    if (!h) h = '<div class="empty" style="padding:22px 4px">' + (P && P.voice ? 'Just you in ' + esc(P.voice.name) + '.' : P && P.ok === false ? 'Discord not linked.' : 'Not in a voice call.') + '</div>';
+    setHTML('cpeople', 'cpeople', h);
+  }
+  function openMenu(id) { pmOpen = id; renderMenu(); $('pmenu').className = 'ov show'; }
+  function closeMenu() { pmOpen = null; $('pmenu').className = 'ov'; sig.pmbox = null; }
+  function renderMenu() {
+    var u = personById(pmOpen);
+    if (!u) { closeMenu(); return; }
+    if (sliding) return;
+    var pv = pmVol[u.id], vol = pv && Date.now() - pv.at < 3000 ? pv.vol : u.volume, f = Math.min(1, vol / 200) * 100;
+    var badges = [];
+    if (u.speaking) badges.push('talking'); if (u.mute) badges.push('muted'); if (u.deaf) badges.push('deafened');
+    if (u.stream) badges.push('streaming'); if (u.video) badges.push('camera on');
+    var h = '<div class="hd">' + avatar(u) + '<div class="nm"><b>' + esc(u.name) + '</b><small>' + esc(badges.join(' · ') || 'in your call') + '</small></div><div class="btn" data-act="pm-close" style="width:90px">CLOSE</div></div>' +
+      '<div class="slrow"><div class="k">VOLUME</div><div class="sl" data-sl="1" data-user="' + esc(u.id) + '"><div class="tr"><div class="fl" style="width:' + f + '%"></div></div><div class="kn" style="left:' + f + '%"></div></div><div class="pv">' + vol + '%</div></div>' +
+      '<div class="btnrow">' +
+        '<div class="btn' + (u.localMute ? ' alert' : '') + '" data-act="dlmute" data-arg=\'"' + esc(u.id) + '"\'>' + (u.localMute ? 'UNMUTE' : 'MUTE FOR ME') + '</div>' +
+        '<div class="btn' + (u.soundMuted ? ' alert' : '') + '" data-act="dsbmute" data-arg=\'"' + esc(u.id) + '"\'>' + (u.soundMuted ? 'SOUNDS MUTED' : 'MUTE SOUNDBOARD') + '</div>' +
+        '<div class="btn" data-act="dvol" data-arg=\'{"id":"' + esc(u.id) + '","vol":100}\'>RESET 100%</div>' +
+      '</div>';
+    setHTML('pmbox', 'pmbox', h);
+  }
+
+  function renderSystem() { renderSliders('sliders'); }
+  function renderSliders(box, few) {
+    var v = S.vols || {}, buses = [['game', 'GAME'], ['comms', 'COMMS'], ['media', 'MEDIA'], ['fx', 'FX']], html = '';
+    if (few) buses = buses.slice(0, 3);
+    if (sliding || !$(box)) return;
+    for (var i = 0; i < buses.length; i++) {
+      var b = v[buses[i][0]] || {}, pct = b.pct === null || b.pct === undefined ? 0 : Math.min(100, b.pct);
+      html += '<div class="slrow' + (b.muted ? ' muted' : '') + '"><div class="k">' + buses[i][1] + '</div><div class="sl" data-sl="1" data-bus="' + buses[i][0] + '"><div class="tr"><div class="fl" style="width:' + pct + '%"></div></div><div class="kn" style="left:' + pct + '%"></div></div><div class="pv">' + (b.pct === null || b.pct === undefined ? '—' : b.pct + '%') + '</div><div class="btn' + (b.muted ? ' alert' : '') + '" data-act="vol" data-arg=\'{"bus":"' + buses[i][0] + '","mute":true}\'>' + (b.muted ? 'MUTED' : 'MUTE') + '</div></div>';
+    }
+    setHTML(box, box, html);
+  }
+
+  function renderDiscord() {
+    if (!D) return;
+    if (!D.ok) { setHTML('vchans', 'vchans', '<div class="empty">' + esc(D.err || 'Discord not linked') + '</div>'); return; }
+    var gs = D.guilds || [], cur = D.voice;
+    if (!selGuild) { selGuild = cur ? cur.guild : null; for (var a = 0; !selGuild && a < gs.length; a++) if (gs[a].busy) selGuild = gs[a].id; if (!selGuild && gs[0]) selGuild = gs[0].id; }
+    var gh = '', g = null;
+    for (var i = 0; i < gs.length; i++) {
+      if (gs[i].id === selGuild) g = gs[i];
+      gh += '<div class="gchip' + (gs[i].id === selGuild ? ' sel' : '') + '" data-guild="' + esc(gs[i].id) + '">' + (gs[i].icon ? '<img src="' + esc(img(gs[i].icon)) + '">' : esc(initials(gs[i].name))) + (gs[i].busy ? '<span class="n">' + gs[i].busy + '</span>' : '') + '</div>';
+    }
+    setHTML('guilds', 'guilds', gh);
+    $('vlbl').textContent = 'VOICE CHANNELS' + (g ? ' · ' + g.name.toUpperCase() : '');
+    var ch = (g && g.channels) || [], vh = '';
+    for (var j = 0; j < ch.length; j++) {
+      var here = cur && cur.id === ch[j].id, who = '';
+      for (var k = 0; k < ch[j].users.length && k < 8; k++) who += avatar(ch[j].users[k], 'sm');
+      if (ch[j].users.length > 8) who += '<div class="av sm">+' + (ch[j].users.length - 8) + '</div>';
+      vh += '<div class="vch' + (here ? ' cur' : '') + '" data-act="djoin" data-arg=\'"' + esc(ch[j].id) + '"\'><div class="nm">&#xf028; ' + esc(ch[j].name) + '</div><div class="who">' + who + '</div></div>';
+    }
+    setHTML('vchans', 'vchans', vh || '<div class="empty">No voice channels.</div>');
+    var ps = D.people || [], ph = '';
+    $('plbl').textContent = cur ? 'IN YOUR CALL · ' + String(cur.name).toUpperCase() : 'IN YOUR CALL';
+    for (var p = 0; p < ps.length; p++) {
+      var u = ps[p], badges = [];
+      if (u.localMute) badges.push('muted for you'); else if (u.mute) badges.push('muted');
+      if (u.deaf) badges.push('deafened'); if (u.stream) badges.push('LIVE'); if (u.video) badges.push('cam');
+      ph += '<div class="person' + (u.localMute ? ' lm' : '') + '"><div data-act="dlmute" data-arg=\'"' + esc(u.id) + '"\'>' + avatar(u) + '</div><div class="nm" data-act="dlmute" data-arg=\'"' + esc(u.id) + '"\'><b>' + esc(u.name) + '</b><small>' + esc(badges.join(' · ') || (u.speaking ? 'talking' : 'tap = mute for you')) + '</small></div>' +
+        '<div class="vb" data-act="dvol" data-arg=\'{"id":"' + esc(u.id) + '","vol":' + Math.max(0, u.volume - 10) + '}\'>−</div><div class="vv">' + u.volume + '%</div><div class="vb" data-act="dvol" data-arg=\'{"id":"' + esc(u.id) + '","vol":' + Math.min(200, u.volume + 10) + '}\'>+</div></div>';
+    }
+    setHTML('people', 'people', ph || '<div class="empty">' + (cur ? 'Just you in here.' : 'Not in a voice channel. Tap one on the left.') + '</div>');
+    var ss = D.sounds || [], sh = '';
+    for (var s = 0; s < ss.length; s++) sh += '<div class="snd" data-act="dsound" data-arg=\'{"id":"' + esc(ss[s].id) + '","guild":"' + esc(ss[s].guild) + '"}\'><div class="e">' + esc(ss[s].emoji || '♪') + '</div><div class="n">' + esc(ss[s].name) + '</div></div>';
+    setHTML('sounds', 'sounds', sh || '<div class="empty">No soundboard sounds found.</div>');
+    var st = document.querySelectorAll('#stat4 .btn');
+    for (var q = 0; q < st.length; q++) st[q].className = 'btn' + (argOf(st[q]) === D.status ? ' on' : '');
+    var cs = S.statuses || [], chtml = '<div class="btnrow">';
+    for (var r = 0; r < cs.length && r < 3; r++) chtml += '<div class="btn' + (D.custom === cs[r] ? ' on' : '') + '" data-act="dcustom" data-arg=\'' + esc(JSON.stringify({ text: cs[r], mins: 60 })) + '\'>' + esc(cs[r]) + '</div>';
+    chtml += '</div><div class="btnrow"><div class="btn" data-act="dcustom" data-arg="null">CLEAR CUSTOM STATUS' + (D.custom ? ' · ' + esc(D.custom) : '') + '</div></div>';
+    setHTML('customs', 'customs', chtml);
+  }
+
+  var newClips = 0;
+  function renderClips() {
+    if (!CL) return;
+    var html = '', send = S && S.send, up = S && S.discord && S.discord.upload;
+    for (var i = 0; i < CL.length && i < 9; i++) {
+      var c = CL[i], isNew = c.status === 'new', st = '';
+      if (send && send.id === c.id) {
+        if (send.state === 'encoding') st = 'MAKING SHARE COPY…';
+        else if (send.state === 'staging') st = 'HANDING TO DISCORD…';
+        else if (send.state === 'error') st = 'FAILED: ' + send.err;
+        else if (send.state === 'uploading') st = up && up.state === 'sent' ? 'SENT ✓' : up && up.state === 'error' ? 'FAILED: ' + up.err : 'UPLOADING ' + ((up && up.pct) || 0) + '%';
+      }
+      html += '<div class="clip' + (isNew ? ' new' : '') + '"><div class="th">' + (c.thumb ? '<img src="/thumb?id=' + encodeURIComponent(c.id) + '">' : '') + '<span class="badge' + (isNew ? '' : ' kept') + '">' + (isNew ? 'NEW' : 'KEPT') + '</span></div>' +
+        '<div class="meta"><b>' + esc(c.game) + '</b> · ' + n(c.duration) + ' s · ' + esc(ago(c.time)) + (c.cam ? ' · cam' : '') + '</div>' +
+        (st ? '<div class="meta" style="color:#ff8c1a"><b style="color:#ff8c1a">' + esc(st) + '</b></div>' : '') +
+        '<div class="btnrow">' + (isNew ? '<div class="btn on" data-act="clip-keep" data-arg=\'"' + esc(c.id) + '"\'>KEEP</div>' : '') +
+        (isNew ? '<div class="btn alert" data-hold="clip-trash" data-arg=\'"' + esc(c.id) + '"\'>TRASH (HOLD)</div>' : '') + '<div class="btn" data-act="clip-send" data-arg=\'"' + esc(c.id) + '"\'>SEND</div></div></div>';
+    }
+    setHTML('cgrid', 'cgrid', html || '<div class="empty">No clips waiting. Save one with CLIP.</div>');
+  }
+
+  // ── polling ──
+  // the desktop's clock minus ours, from the quickest recent /api/state round trip (LAN: a few ms of error).
+  var OFFSET = 0, samples = [];
+  function clockSample(serverNow, t0, t1) {
+    if (!serverNow) return;
+    samples.push({ rtt: t1 - t0, off: serverNow - (t0 + t1) / 2 });
+    if (samples.length > 40) samples.shift();
+    var best = samples[0];
+    for (var i = 1; i < samples.length; i++) if (samples[i].rtt < best.rtt) best = samples[i];
+    OFFSET = best.off;
+  }
+  function snow() { return Date.now() + OFFSET; }
+  function poll() {
+    if (document.hidden) return;
+    xhr('GET', '/api/state', null, function (v, st, t0) {
+      if (v) { clockSample(v.now, t0, Date.now()); S = v; lastOk = Date.now(); if (v.bomb && (!B || v.bomb.gen !== B.gen)) B = v.bomb; render(); if (TAB === 'clips') renderClips(); }
+      else if (st === 401) toast('Key rejected: open the address from ember-pad url again.');
+    });
+  }
+  var dBusy = false;
+  function pollDiscord() {
+    if (dBusy || document.hidden) return;
+    dBusy = true;
+    xhr('GET', '/api/discord', null, function (v) { dBusy = false; if (v) { D = v; if (TAB === 'discord') renderDiscord(); if (TAB === 'stream') renderStream(); } });
+  }
+  function pollClips() {
+    xhr('GET', '/api/clips', null, function (v) {
+      if (!v) return;
+      CL = v; var nn = 0; for (var i = 0; i < v.length; i++) if (v[i].status === 'new') nn++;
+      if (nn !== newClips) { newClips = nn; var t = $('tab-clips'); t.textContent = nn ? 'CLIPS ' + nn : 'CLIPS'; t.className = 'tab' + (TAB === 'clips' ? ' sel' : '') + (nn ? ' ping' : ''); }
+      if (TAB === 'clips') renderClips();
+    });
+  }
+  function tick() {
+    var d = new Date(), h = d.getHours(), mi = d.getMinutes();
+    $('clock').textContent = (h < 10 ? '0' : '') + h + ':' + (mi < 10 ? '0' : '') + mi;
+    $('brand').className = 'brand' + (Date.now() - lastOk < 5000 ? '' : ' down');
+  }
+  setInterval(poll, 1000);
+  setInterval(function () { if (TAB === 'discord' || TAB === 'stream') pollDiscord(); }, 1000);
+  setInterval(function () { if (TAB === 'control' && !document.hidden) pollPeople(); }, 1000);
+  setInterval(function () { if (TAB === 'clips') pollClips(); }, 4000);
+  setInterval(function () { if (TAB !== 'clips') pollClips(); }, 30000);
+  setInterval(tick, 1000);
+  // the bomb countdown needs tenths
+  setInterval(function () { if (S && ((B && B.state === 'planted') || (S.cs2 && S.cs2.bomb === 'planted'))) renderOverlays(); }, 33);
+  function bombLoop() {
+    xhr('GET', '/api/bomb?gen=' + (B ? B.gen : 'x'), null, function (v) {
+      if (v) { B = v; if (S) renderOverlays(); }
+      setTimeout(bombLoop, v ? 0 : 2000);
+    }, 25000);
+  }
+  bombLoop();
+  poll(); tick(); pollClips();
+  if (location.hash.length > 1) tab(location.hash.slice(1));
+})();
+</script>
+</body>
+</html>

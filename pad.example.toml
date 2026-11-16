@@ -1,0 +1,21 @@
+# ~/.config/ember/pad.toml: every key is optional; these are the defaults.
+
+# Where the HTTP server listens. Only private-network peers are answered, and every request needs the key.
+bind = "0.0.0.0:7790"
+
+# Discord's DevTools port (start Discord with --remote-debugging-port=9223; loopback only).
+discord_port = 9223
+
+# magi-overlay (OBS scenes, stream health, CS2 state). Leave it if you don't run it: those tiles go grey.
+overlay = "127.0.0.1:7788"
+scenes = ["starting", "stream", "chatting", "brb", "ending"]
+
+# Monitors for the Go Live buttons (Hyprland connector names). Empty = first / second monitor.
+share_screen = ""
+side_screen = ""
+
+# PipeWire source whose mute state the mic tile shows.
+mic = "@DEFAULT_SOURCE@"
+
+# Quick picks on the DISCORD tab's custom status card.
+custom_statuses = ["In a match, back in 40", "Streaming", "AFK, back soon"]

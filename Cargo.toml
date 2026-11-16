@@ -1,0 +1,20 @@
+[package]
+name = "ember-pad"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "LAN touch deck for an old tablet: Discord, OBS, audio buses, clips and a CS2 bomb timer for a Hyprland desktop"
+license = "MIT"
+repository = "https://github.com/Tjabooo/ember-pad"
+publish = false
+
+[dependencies]
+libc = "0.2"
+serde_json = { version = "1", features = ["preserve_order"] }
+toml = { version = "1", default-features = false, features = ["parse", "serde"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
