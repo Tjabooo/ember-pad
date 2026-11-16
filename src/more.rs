@@ -7,7 +7,8 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
-pub const BUSES: [(&str, &str); 4] = [("game", "ember_game"), ("comms", "ember_comms"), ("media", "ember_media"), ("fx", "ember_fx")];
+pub const BUSES: [(&str, &str); 4] =
+    [("game", "ember_game"), ("comms", "ember_comms"), ("media", "ember_media"), ("fx", "ember_fx")];
 
 /// Volume (%) and mute of the EMBER buses.
 pub fn volumes() -> Value {
@@ -70,7 +71,8 @@ fn mangohud() -> Option<(f64, f64)> {
 
 /// FPS (MangoHud), CPU/GPU load + temps (magi-overlay's stats), ping/jitter/loss (emberd's probe).
 pub fn perf(overlay_stats: &Value) -> Value {
-    let net: Value = fs::read_to_string(state_dir().join("net.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(Value::Null);
+    let net: Value =
+        fs::read_to_string(state_dir().join("net.json")).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or(Value::Null);
     let fresh = net["time"].as_f64().is_some_and(|t| {
         SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0) - t < 10.0
     });
@@ -99,7 +101,9 @@ pub fn clips() -> Value {
         .flatten()
         // Kept clips live on the home server's automount: trust clips.json instead of stat()ing it on every
         // poll (a hung or locked share would stall the request; Windows locks the account after bad logins).
-        .filter(|c| c["status"] == "kept" || (c["status"] == "new" && c["path"].as_str().is_some_and(|p| PathBuf::from(p).exists())))
+        .filter(|c| {
+            c["status"] == "kept" || (c["status"] == "new" && c["path"].as_str().is_some_and(|p| PathBuf::from(p).exists()))
+        })
         .collect();
     list.sort_by(|a, b| {
         let new = |c: &Value| c["status"] == "new";
@@ -140,7 +144,10 @@ pub fn image(url: &str) -> Option<Vec<u8>> {
         return None;
     }
     let base = url.split('?').next()?;
-    let png = format!("{}.png?size=64", base.strip_suffix(".webp").or(base.strip_suffix(".png")).or(base.strip_suffix(".gif")).unwrap_or(base));
+    let png = format!(
+        "{}.png?size=64",
+        base.strip_suffix(".webp").or(base.strip_suffix(".png")).or(base.strip_suffix(".gif")).unwrap_or(base)
+    );
     let name: String = png.bytes().map(|b| if b.is_ascii_alphanumeric() { b as char } else { '_' }).collect();
     let dir = home().join(".cache/ember-pad/img");
     let file = dir.join(&name[name.len().saturating_sub(120)..]);
@@ -165,16 +172,14 @@ pub fn unescape(s: &str) -> String {
     let mut i = 0;
     while i < b.len() {
         match b[i] {
-            b'%' if i + 2 < b.len() => {
-                match u8::from_str_radix(std::str::from_utf8(&b[i + 1..i + 3]).unwrap_or("zz"), 16) {
-                    Ok(v) => {
-                        out.push(v);
-                        i += 3;
-                        continue;
-                    }
-                    Err(_) => out.push(b'%'),
+            b'%' if i + 2 < b.len() => match u8::from_str_radix(std::str::from_utf8(&b[i + 1..i + 3]).unwrap_or("zz"), 16) {
+                Ok(v) => {
+                    out.push(v);
+                    i += 3;
+                    continue;
                 }
-            }
+                Err(_) => out.push(b'%'),
+            },
             b'+' => out.push(b' '),
             c => out.push(c),
         }

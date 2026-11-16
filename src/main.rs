@@ -17,7 +17,6 @@ mod cdp;
 mod more;
 mod util;
 
-use util::{home, sh};
 use serde_json::{Value, json};
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -27,6 +26,7 @@ use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use util::{home, sh};
 
 const PAGE: &str = include_str!("page.html");
 const DISCORD_JS: &str = include_str!("discord.js");
@@ -100,10 +100,8 @@ fn runtime_dir() -> PathBuf {
 }
 
 fn load_cfg() -> Cfg {
-    let t: toml::Table = fs::read_to_string(home().join(".config/ember/pad.toml"))
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or_default();
+    let t: toml::Table =
+        fs::read_to_string(home().join(".config/ember/pad.toml")).ok().and_then(|s| s.parse().ok()).unwrap_or_default();
     let s = |k: &str, d: &str| t.get(k).and_then(|v| v.as_str()).unwrap_or(d).to_owned();
     let scenes = t
         .get("scenes")
@@ -266,7 +264,13 @@ fn serve() {
 
 fn read_mic(s: &Shared) {
     let out = sh(&["pactl", "get-source-mute", &s.cfg.mic], Duration::from_secs(2));
-    let v = if out.contains("yes") { Some(true) } else if out.contains("no") { Some(false) } else { None };
+    let v = if out.contains("yes") {
+        Some(true)
+    } else if out.contains("no") {
+        Some(false)
+    } else {
+        None
+    };
     *s.mic.lock().unwrap() = v;
 }
 
@@ -563,10 +567,8 @@ fn run_detached(cmd: &str) {
 }
 
 fn deck_actions() -> Vec<Value> {
-    let t: toml::Table = fs::read_to_string(home().join(".config/ember/deck.toml"))
-        .ok()
-        .and_then(|s| s.parse().ok())
-        .unwrap_or_default();
+    let t: toml::Table =
+        fs::read_to_string(home().join(".config/ember/deck.toml")).ok().and_then(|s| s.parse().ok()).unwrap_or_default();
     t.get("action")
         .and_then(|a| a.as_array())
         .map(|a| {
@@ -614,11 +616,10 @@ fn clip_send(s: &Arc<Shared>, cid: &str) -> Value {
     let cid = cid.to_owned();
     std::thread::spawn(move || {
         let set = |v: Value| *s2.send.lock().unwrap() = v;
-        let out = sh(
-            &["sh", "-c", &format!("PATH=\"$HOME/.local/bin:$PATH\" ember-clip share '{cid}'")],
-            Duration::from_secs(1800),
-        );
-        let Some(path) = out.lines().rev().map(str::trim).find(|l| l.starts_with('/') && std::path::Path::new(l).exists()).map(str::to_owned)
+        let out =
+            sh(&["sh", "-c", &format!("PATH=\"$HOME/.local/bin:$PATH\" ember-clip share '{cid}'")], Duration::from_secs(1800));
+        let Some(path) =
+            out.lines().rev().map(str::trim).find(|l| l.starts_with('/') && std::path::Path::new(l).exists()).map(str::to_owned)
         else {
             return set(json!({ "id": cid, "state": "error", "err": "share copy failed", "at": now_ms() }));
         };
@@ -977,10 +978,8 @@ pub fn http(addr: &str, method: &str, path: &str, body: Option<&str>, timeout: D
     let body = body.unwrap_or("");
     // X-Magi: magi-overlay refuses control POSTs without it (cross-site request guard).
     let ctype = if method == "POST" { "Content-Type: application/json\r\nX-Magi: 1\r\n" } else { "X-Magi: 1\r\n" };
-    let head = format!(
-        "{method} {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n{ctype}Content-Length: {}\r\n\r\n",
-        body.len()
-    );
+    let head =
+        format!("{method} {path} HTTP/1.1\r\nHost: {addr}\r\nConnection: close\r\n{ctype}Content-Length: {}\r\n\r\n", body.len());
     c.write_all(head.as_bytes()).and_then(|_| c.write_all(body.as_bytes())).map_err(|e| e.to_string())?;
     // Read until the body is complete: Chromium's DevTools server ignores `Connection: close` and keeps the
     // socket open, so read_to_end would only end at the timeout.
@@ -1014,7 +1013,8 @@ pub fn http(addr: &str, method: &str, path: &str, body: Option<&str>, timeout: D
     }
     let mut out = Vec::new();
     while let Some(nl) = rest.windows(2).position(|w| w == b"\r\n") {
-        let size = usize::from_str_radix(String::from_utf8_lossy(&rest[..nl]).split(';').next().unwrap_or("").trim(), 16).unwrap_or(0);
+        let size =
+            usize::from_str_radix(String::from_utf8_lossy(&rest[..nl]).split(';').next().unwrap_or("").trim(), 16).unwrap_or(0);
         if size == 0 || rest.len() < nl + 2 + size {
             break;
         }
@@ -1073,23 +1073,41 @@ mod tests {
         let d = s.bomb.lock().unwrap().deadline;
         assert!(d >= t0 + 40_000 && d <= now_ms() + 40_000);
         // the game's countdown takes over; a later (more delayed) estimate never pushes it out
-        post(&s, json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "39.5" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "39.5" } }),
+        );
         let first = s.bomb.lock().unwrap().deadline;
         assert!(first <= now_ms() + 39_500 && s.bomb.lock().unwrap().src == "countdown");
         std::thread::sleep(Duration::from_millis(30));
-        post(&s, json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "39.5" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "39.5" } }),
+        );
         assert_eq!(s.bomb.lock().unwrap().deadline, first);
         // defuse starts, then stops
-        post(&s, json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "defuse", "phase_ends_in": "4.9" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "defuse", "phase_ends_in": "4.9" } }),
+        );
         assert!(s.bomb.lock().unwrap().defuse_deadline > 0);
         assert_eq!(s.bomb.lock().unwrap().deadline, first, "bomb deadline kept while defusing");
-        post(&s, json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "30.0" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": { "bomb": "planted" }, "phase_countdowns": { "phase": "bomb", "phase_ends_in": "30.0" } }),
+        );
         assert_eq!(s.bomb.lock().unwrap().defuse_deadline, 0);
         // round over → defused; next round → cleared
-        post(&s, json!({ "auth": { "token": "k" }, "round": { "bomb": "defused" }, "phase_countdowns": { "phase": "over", "phase_ends_in": "6.0" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": { "bomb": "defused" }, "phase_countdowns": { "phase": "over", "phase_ends_in": "6.0" } }),
+        );
         assert_eq!(s.bomb.lock().unwrap().state, "defused");
         let g = s.bomb.lock().unwrap().generation;
-        post(&s, json!({ "auth": { "token": "k" }, "round": {}, "phase_countdowns": { "phase": "freezetime", "phase_ends_in": "15.0" } }));
+        post(
+            &s,
+            json!({ "auth": { "token": "k" }, "round": {}, "phase_countdowns": { "phase": "freezetime", "phase_ends_in": "15.0" } }),
+        );
         let b = s.bomb.lock().unwrap();
         assert!(b.state.is_empty() && b.deadline == 0 && b.generation > g);
     }
