@@ -12,7 +12,29 @@
 function (act, arg) {
   var W = window.Vencord && window.Vencord.Webpack;
   var C = W ? W.Common : {};
-  function store(n) { try { return W && W.findStore ? W.findStore(n) : null; } catch (e) { return null; } }
+  // Common first, then findStore, then a scan of webpack's module cache: Vencord's findStore broke on
+  // Discord 0.0.169-era builds (throws "Reflect.get called on non-object"), which emptied the panel.
+  function scanStore(n) {
+    var cache = window.__emberPadStores || (window.__emberPadStores = {});
+    if (cache[n]) return cache[n];
+    var c = W && (W.cache || (W.wreq && W.wreq.c));
+    function hit(x) {
+      try { return x && typeof x === 'object' && typeof x.getName === 'function' && x.getName() === n; } catch (e) { return false; }
+    }
+    for (var k in c) {
+      var e = c[k] && c[k].exports;
+      if (!e) continue;
+      if (hit(e)) return (cache[n] = e);
+      if (typeof e === 'object') for (var p in e) { var v; try { v = e[p]; } catch (_) { continue; } if (hit(v)) return (cache[n] = v); }
+    }
+    return null;
+  }
+  function store(n) {
+    if (!W) return null;
+    try { if (C && C[n]) return C[n]; } catch (e) {}
+    try { var s = W.findStore ? W.findStore(n) : null; if (s) return s; } catch (e) {}
+    try { return scanStore(n); } catch (e) { return null; }
+  }
   function props(n) { try { return W ? W.findByProps(n) : null; } catch (e) { return null; } }
   function call(f) { try { return f(); } catch (e) { return undefined; } }
   function btn(re, root) {
