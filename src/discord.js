@@ -37,12 +37,34 @@ function (act, arg) {
   }
   function props(n) { try { return W ? W.findByProps(n) : null; } catch (e) { return null; } }
   function call(f) { try { return f(); } catch (e) { return undefined; } }
+  // Visible matches first: Discord keeps hidden copies of some call controls around.
   function btn(re, root) {
-    var b = (root || document).querySelectorAll('button,[role="button"],[role="switch"]');
+    var b = (root || document).querySelectorAll('button,[role="button"],[role="switch"]'), hidden = null;
     for (var i = 0; i < b.length; i++) {
-      if (re.test(b[i].getAttribute('aria-label') || '')) return b[i];
+      if (!re.test(b[i].getAttribute('aria-label') || '')) continue;
+      var r = b[i].getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) return b[i];
+      if (!hidden) hidden = b[i];
     }
-    return null;
+    return hidden;
+  }
+  // The share button only exists in the call view (not the small voice panel) when the window
+  // isn't showing the call: open the call, wait for the button, click it, then go back.
+  function inCallView(re, then) {
+    var b = btn(re);
+    if (b) { then(b, null); return true; }
+    var vc = voiceChannel(), nav = C && C.NavigationRouter;
+    if (!vc || !nav || !nav.transitionTo) return false;
+    var back = location.pathname;
+    try { nav.transitionTo('/channels/' + (vc.guild_id || '@me') + '/' + vc.id); } catch (e) { return false; }
+    var n = 0, t = setInterval(function () {
+      var f = btn(re);
+      if (f || ++n > 20) {
+        clearInterval(t);
+        if (f) then(f, back);
+      }
+    }, 150);
+    return true;
   }
   function byText(re) {
     var d = document.querySelectorAll('[role="dialog"] button');
@@ -195,9 +217,15 @@ function (act, arg) {
     dc.click();
   } else if (act === 'camera') {
     if (!s.voice) return { ok: false, err: 'join a voice channel first' };
-    var c = btn(s.video ? /turn off camera/i : /turn on camera/i) || btn(/camera/i);
-    if (!c) return { ok: false, err: 'camera button not found' };
-    c.click();
+    // Discord's own action works whatever the window shows; the button is the fallback.
+    var mea = props('setVideoEnabled');
+    if (mea && typeof mea.setVideoEnabled === 'function' && call(function () { mea.setVideoEnabled(!s.video); return true; })) {
+      // done
+    } else {
+      var c = btn(s.video ? /turn off camera/i : /turn on camera/i);
+      if (!c) return { ok: false, err: 'camera button not found' };
+      c.click();
+    }
   } else if (act === 'stream') {
     if (!s.voice) return { ok: false, err: 'join a voice channel first' };
     if (s.streaming) {
@@ -205,9 +233,9 @@ function (act, arg) {
       if (!stop) return { ok: false, err: 'stop button not found' };
       stop.click();
     } else {
-      var share = btn(/share your screen|share screen|go live/i);
-      if (!share) return { ok: false, err: 'share button not found' };
-      share.click();
+      var back = null;
+      var opened = inCallView(/share your screen|share screen|go live/i, function (b, prev) { back = prev; b.click(); });
+      if (!opened) return { ok: false, err: 'share button not found' };
       // Picker modal: "Share entire screen" → "Make Selection"; the xdg portal then asks
       // ember-share-picker (armed with the monitor) and the stream starts at the saved quality.
       // Older clients end in a "Go Live" button instead.
@@ -222,8 +250,11 @@ function (act, arg) {
           }
         }
         var go = byText(/^make selection$/i) || byText(/^go live$/i);
-        if (go) { go.click(); clearInterval(t); }
-        else if (tries > 50) clearInterval(t);
+        if (go || tries > 60) {
+          if (go) go.click();
+          clearInterval(t);
+          if (back) setTimeout(function () { try { C.NavigationRouter.transitionTo(back); } catch (e) {} }, 1500);
+        }
       }, 250);
     }
   } else if (act === 'join') {
